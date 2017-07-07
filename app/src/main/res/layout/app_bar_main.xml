@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.design.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="com.example.asus.story.MainActivity">
+
+    <android.support.design.widget.AppBarLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:theme="@style/AppTheme.AppBarOverlay">
+
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:weightSum="1">
+
+            <android.support.v7.widget.Toolbar
+                android:id="@+id/toolbar"
+                android:layout_width="134dp"
+                android:layout_height="?attr/actionBarSize"
+                android:layout_alignParentStart="true"
+                android:layout_centerVertical="true"
+                android:layout_weight="0.67"
+                android:background="?attr/colorPrimary"
+                app:layout_anchor="@+id/include"
+                app:popupTheme="@style/AppTheme.PopupOverlay"
+                tools:ignore="NotSibling,ObsoleteLayoutParam">
+
+            </android.support.v7.widget.Toolbar>
+
+            <TextView
+                android:id="@+id/textView5"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentTop="true"
+                android:layout_gravity="center"
+                android:layout_marginEnd="15dp"
+                android:layout_marginRight="15dp"
+                android:layout_toStartOf="@+id/textView7"
+                android:layout_weight="0.15"
+                android:paddingBottom="0dp"
+                android:paddingTop="16dp"
+                android:text="@string/app_name"
+                android:textSize="20sp"
+                tools:ignore="ObsoleteLayoutParam,RelativeOverlap,RtlHardcoded" />
+
+            <View
+                android:id="@+id/underlineView"
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_alignEnd="@+id/textView5"
+                android:layout_alignLeft="@+id/textView5"
+                android:layout_alignRight="@+id/textView5"
+                android:layout_alignStart="@+id/textView5"
+                android:layout_below="@+id/textView5"
+                android:layout_marginTop="5dp"
+                android:background="@android:color/background_dark"
+                tools:ignore="RtlHardcoded" />
+
+            <View
+                android:id="@+id/textView7"
+                android:layout_width="2dp"
+                android:layout_height="20dp"
+                android:layout_alignBottom="@+id/likevw"
+                android:layout_marginEnd="15dp"
+                android:layout_toStartOf="@+id/likevw"
+                android:background="@android:color/background_dark"
+                tools:ignore="HardcodedText" />
+
+            <TextView
+                android:id="@+id/likevw"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentEnd="true"
+                android:layout_alignParentTop="true"
+                android:layout_marginEnd="15dp"
+                android:layout_weight="0.15"
+                android:foregroundGravity="center"
+                android:gravity="center"
+                android:paddingBottom="0dp"
+                android:paddingTop="16dp"
+                android:text="@string/upload"
+                android:textSize="20sp"
+                tools:ignore="ObsoleteLayoutParam" />
+
+            <View
+                android:id="@+id/underlineView1"
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_alignEnd="@+id/likevw"
+                android:layout_alignRight="@+id/likevw"
+                android:layout_below="@+id/likevw"
+                android:layout_marginTop="5dp"
+                android:background="@android:color/background_dark"
+                tools:ignore="RtlHardcoded"
+                android:layout_alignStart="@+id/likevw" />
+
+        </RelativeLayout>
+
+    </android.support.design.widget.AppBarLayout>
+
+    <include
+        android:id="@+id/include"
+        layout="@layout/content_main" />
+
+</android.support.design.widget.CoordinatorLayout>
