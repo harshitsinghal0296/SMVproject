@@ -50,8 +50,8 @@ public class Story {
     //private variables
     int _id;
     String _caption, _desc;
-    String _url, _email;
-    String[] _cat_id;
+    String _path, _email, _url;
+    String _cat_id;
 
 
     byte[] _img;
@@ -76,9 +76,9 @@ public class Story {
         this._desc = desc;
 
     }
-    public Story(String caption, String desc, String url, String[] cat_id, String email){
-        this._url = url;
-        this. _cat_id = cat_id;
+    public Story(String caption, String desc, String path, String cat_id, String email){
+        this._path = path;
+        this._cat_id = cat_id;
         this._caption = caption;
         this._desc = desc;
         this._email = email;
@@ -122,14 +122,24 @@ public class Story {
     //setting profile pic
     public void setImage(byte[] b){this._img=b;}
 
-    //Getting url
+    //Getting path
+    public String getPath(){
+        return this._path;
+    }
+    // setting path
+    public void setPath(String path){
+
+        this._path = path;
+    }
+
+    //Getting path
     public String getUrl(){
         return this._url;
     }
-    // setting url
-    public void setUrl(String url){
+    // setting path
+    public void setUrl(String Url){
 
-        this._url = url;
+        this._url = Url;
     }
 
     //Getting Email
@@ -143,11 +153,11 @@ public class Story {
     }
 
     //Getting Cat_id
-    public String[] getCat_id(){
+    public String getCat_id(){
         return this._cat_id;
     }
-    // setting url
-    public void setCat_id(String[] cat_id){
+    // setting path
+    public void setCat_id(String cat_id){
 
         this._cat_id = cat_id;
     }

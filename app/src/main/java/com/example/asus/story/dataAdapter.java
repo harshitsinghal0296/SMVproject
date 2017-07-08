@@ -16,6 +16,8 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.bumptech.glide.Glide;
+
 import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
 
@@ -67,11 +69,14 @@ public class dataAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         myHolder.id = current._id;
         myHolder.captionText.setText(current._caption);
         myHolder.descText = current._desc ;
-        myHolder.img.setImageBitmap(convertToBitmap(current.getImage()));
-        // load image into imageview using glide
-        //URL imgurl = new URL(current.thumbnail)
-       /* Glide.with(context).load(current._img)
-                .into(myHolder.img);*/
+       //GET IMAGE FROM DB
+        //myHolder.img.setImageBitmap(convertToBitmap(current.getImage()));
+
+        // load image into imageview using glide from API (url)
+
+        Glide.with(context)
+                .load(current._url)
+                .into(myHolder.img);
 
     }
 

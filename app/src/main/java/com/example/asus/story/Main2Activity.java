@@ -26,6 +26,7 @@ public class Main2Activity extends AppCompatActivity {
     Intent intent;
     ImageView arrow1;
     public DataSaver maindatasaver;
+    public Story storysaver;
     private TabLayout tabLayout;
     public CustomViewPager viewPager;
     private DatabaseHandler db;
@@ -39,6 +40,7 @@ public class Main2Activity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main2);
         maindatasaver = new DataSaver();
+        storysaver = new Story();
         Log.d("MAIN","2"+maindatasaver);
         catlist = new ArrayList<HashMap<String, String>>();
         catlist = (ArrayList<HashMap<String, String>>) getIntent().getSerializableExtra("CATEGORY");

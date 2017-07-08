@@ -1,10 +1,16 @@
 package com.example.asus.story;
 
 import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.Intent;
+import android.graphics.Color;
 import android.graphics.Typeface;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.support.design.widget.CoordinatorLayout;
+import android.support.design.widget.Snackbar;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -22,8 +28,17 @@ import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.ViewGroup;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.VolleyLog;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.Volley;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -45,9 +60,10 @@ public class MainActivity extends AppCompatActivity
     Typeface monstRegular,monstBold;
     private String TAG = MainActivity.class.getSimpleName();
     private ProgressDialog pDialog;
+    RelativeLayout mainRL;
 
 
-    // URL to get category JSON
+
     private static String url = "http://kookyapps.com/smv/api/newsType";
     ArrayList<HashMap<String,String>> categoryList;
 
@@ -56,9 +72,32 @@ public class MainActivity extends AppCompatActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         //CATEGORY AS ARRAYLIST
+        mainRL = (RelativeLayout) findViewById(R.id.MainRL);
         categoryList = new ArrayList<>();
-        new GetCategory().execute();
+        if(isOnline(this))
+        {
+            new GetCategory().execute();
+            GetCategorys();
+        }
+        else
+        {
+            Snackbar snackbar = Snackbar
+            .make(mainRL,"No internet connection!", Snackbar.LENGTH_LONG)
+            .setAction("RETRY", new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                }
+            });
 
+            // Changing message text color
+            snackbar.setActionTextColor(Color.RED);
+
+            // Changing action button text color
+                        View sbView = snackbar.getView();
+                        TextView textView = (TextView) sbView.findViewById(android.support.design.R.id.snackbar_text);
+                        textView.setTextColor(Color.YELLOW);
+                        snackbar.show();
+        }
         monstRegular = Typeface.createFromAsset(getAssets(), "fonts/Montserrat-Regular.ttf");
         monstBold = Typeface.createFromAsset(getAssets(), "fonts/Montserrat-Bold.ttf");
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
@@ -89,6 +128,7 @@ public class MainActivity extends AppCompatActivity
         underlineview2 = (View) findViewById(R.id.underlineView1);
         uploadtext.setTextColor(getResources().getColor(R.color.tabcolor));
 
+        /* ADD CATEGORY IN DB
         db = new DatabaseHandler(getApplicationContext());
         int count = db.CountCategory();
         if (count == 0)
@@ -99,10 +139,19 @@ public class MainActivity extends AppCompatActivity
             long id3 = db.createCategory(new Categories(3,"My Favourite"));
             //Log.d("id1 "+id1,"id2 "+id2);
         }
-
+        */
 
     }
-
+    // URL to get category JSON
+    private boolean isOnline(Context context) {
+        ConnectivityManager cm = (ConnectivityManager) context
+                .getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo netInfo = cm.getActiveNetworkInfo();
+        if (netInfo != null && netInfo.isConnected()) {
+            return true;
+        }
+        return false;
+    }
     private void changeTabsFont() {
 
         ViewGroup vg = (ViewGroup) tabLayout.getChildAt(0);
@@ -276,17 +325,12 @@ public class MainActivity extends AppCompatActivity
 
                         String id = c.getString("c_id");
                         String name = c.getString("c_name");
-
-                        // tmp hash map for single contact
-                        HashMap<String, String> contact = new HashMap<>();
-
-                        // adding each child node to HashMap key => value
-                        contact.put("id", id);
-                        contact.put("name", name);
-
+                        HashMap<String, String> cats = new HashMap<>();
+                        cats.put("id",id);
+                        cats.put("name",name);
 
                         // adding contact to contact list
-                        categoryList.add(contact);
+                        categoryList.add(cats);
                     }
                 } catch (final JSONException e) {
                     Log.e(TAG, "Json parsing error: " + e.getMessage());
@@ -315,6 +359,8 @@ public class MainActivity extends AppCompatActivity
 
             }
 
+
+            //GetCategorys();
             return null;
         }
 
@@ -324,9 +370,7 @@ public class MainActivity extends AppCompatActivity
             // Dismiss the progress dialog
             if (pDialog.isShowing())
                 pDialog.dismiss();
-            /**
-             * Updating parsed JSON data into ListView
-             * */
+
             viewPager = (ViewPager) findViewById(R.id.viewpagermain);
             setupViewPager(viewPager);
 
@@ -351,6 +395,49 @@ public class MainActivity extends AppCompatActivity
                 Log.d("CAT","DATA"+categoryList.get(i));
             }
         }
+
+    }
+
+    public void GetCategorys()
+    {
+        JsonObjectRequest req = new JsonObjectRequest(Request.Method.POST,url,
+                new Response.Listener<JSONObject>() {
+                    @Override
+                    public void onResponse(JSONObject response) {
+                        try {
+
+                            VolleyLog.v("Response:%n %s", response.toString(4));
+                            Log.d("Response:%n %s", response.toString());
+                            JSONArray news = response.getJSONArray("data");
+
+                            for (int i = 0; i < news.length(); i++) {
+                                JSONObject s = news.getJSONObject(i);
+
+                                String id = s.getString("c_id");
+                                String name = s.getString("c_name");
+
+                                HashMap<String, String> cats = new HashMap<>();
+                                cats.put("id",id);
+                                cats.put("name",name);
+                                //categoryList.add(cats);
+
+                            }
+
+
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                VolleyLog.e("Error: ", error.getMessage());
+            }
+        });
+
+        // Adding request to request queue
+        RequestQueue requestQueue = Volley.newRequestQueue(MainActivity.this);
+        requestQueue.add(req);
 
     }
 }

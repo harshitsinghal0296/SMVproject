@@ -1,5 +1,6 @@
 package com.example.asus.story;
 
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -14,8 +15,24 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import java.util.ArrayList;
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.VolleyLog;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.Volley;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import static android.content.ContentValues.TAG;
 import static com.example.asus.story.R.id.list1;
 
 /**
@@ -24,6 +41,11 @@ import static com.example.asus.story.R.id.list1;
 
 public class CommonFragment extends Fragment {
 
+    private ProgressDialog pDialog;
+    private dataAdapter data;
+    private RecyclerView lv;
+    private SwipeRefreshLayout swipeRefreshLayout;
+    private RecyclerView.LayoutManager mlayoutmanager;
 
     public CommonFragment(){
 
@@ -60,12 +82,71 @@ public class CommonFragment extends Fragment {
 
         String message = getArguments().getString(EXTRA_MESSAGE);
         Log.d("MESSAGE","ALLSTORY"+ message);
-        TextView TV = (TextView) v1.findViewById(R.id.textView2);
-        TV.setText(message);
+       // TextView TV = (TextView) v1.findViewById(R.id.textView2);
+        //TV.setText(message);
 
+        lv = (RecyclerView) v1.findViewById(list1);
+        mlayoutmanager = new LinearLayoutManager(getActivity(),LinearLayoutManager.VERTICAL, false);
+        lv.setLayoutManager(mlayoutmanager);
+
+
+        getData();
 
         return v1;
     }
 
+    public void getData()
+    {
+        // Tag used to cancel the request
 
+        String url = "http://kookyapps.com/smv/api/FetchNews/";
+
+        HashMap<String, String> params = new HashMap<String, String>();
+        params.put("cat_id", "0");
+        params.put("upper_limit", "0");
+        params.put("lower_limit", "10");
+
+        JsonObjectRequest req = new JsonObjectRequest(Request.Method.POST,url, new JSONObject(params),
+                new Response.Listener<JSONObject>() {
+                    @Override
+                    public void onResponse(JSONObject response) {
+                        try {
+
+                            VolleyLog.v("Response:%n %s", response.toString(4));
+                            Log.d("Response:%n %s", response.toString());
+                            JSONArray news = response.getJSONArray("data");
+
+                            final ArrayList<Story> story = new ArrayList<>();
+                            for (int i = 0; i < news.length(); i++) {
+                                JSONObject s = news.getJSONObject(i);
+                                Story storyobj = new Story();
+
+                                int n = Integer.parseInt(s.get("n_id").toString());
+                                storyobj.setID(n);
+                                storyobj.setcaption(s.getString("n_title"));
+                                storyobj.setdesc(s.getString("n_desc"));
+                                storyobj.setCat_id(s.getString("n_cat"));
+                                storyobj.setUrl(s.getString("n_img"));
+                                storyobj.setEmail(s.getString("n_email"));
+                                story.add(storyobj);
+
+                            }
+
+                            data=new dataAdapter(context, story);
+                            lv.setAdapter(data);
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                VolleyLog.e("Error: ", error.getMessage());
+            }
+        });
+
+        // Adding request to request queue
+        RequestQueue requestQueue = Volley.newRequestQueue(getActivity());
+        requestQueue.add(req);
+    }
 }

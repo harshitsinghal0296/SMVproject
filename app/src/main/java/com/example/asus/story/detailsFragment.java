@@ -1,19 +1,14 @@
 package com.example.asus.story;
 
 import android.annotation.TargetApi;
-import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Typeface;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
 import android.net.Uri;
-import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
-import android.os.Handler;
 import android.provider.MediaStore;
 import android.support.v4.app.Fragment;
 import android.util.Log;
@@ -46,7 +41,6 @@ import static android.app.Activity.RESULT_OK;
 
 public class detailsFragment extends Fragment {
     TextView next1;
-    boolean FTPstatus = false,onPost = false;
     EditText title,desc;
     ImageView img;
     private Uri resultUri = null;
@@ -54,38 +48,10 @@ public class detailsFragment extends Fragment {
     MultiSpinnerSearch spinner;
     ArrayList<Categories> cat;
     Typeface monstRegular,monstBold;
-    String imagefilePath;
-    private MyFTPClientFunctions mFtpClient = null;
-    private ProgressDialog pd;
+    String imagefilePath = null;
     private int selected = 0;
     private String UploadedUrl;
-    private Handler handler = new Handler() {
 
-        public void handleMessage(android.os.Message msg) {
-
-            if (pd != null && pd.isShowing()) {
-                pd.dismiss();
-            }
-            if (msg.what == 0) {
-            }
-            else if (msg.what == 1) {
-
-            } else if (msg.what == 2) {
-                Toast.makeText(getContext(), "Uploaded Successfully!", Toast.LENGTH_LONG).show();
-            } else if (msg.what == 3) {
-                Toast.makeText(getContext(), "Disconnected Successfully!",
-                        Toast.LENGTH_LONG).show();
-            }  else if (msg.what == 4) {
-                Toast.makeText(getContext(), "Failed Uploading!",
-                        Toast.LENGTH_LONG).show();
-            }else {
-                Toast.makeText(getContext(), "Unable to Perform Action!",
-                        Toast.LENGTH_LONG).show();
-            }
-
-        }
-
-    };
     public detailsFragment(){
 
     }
@@ -95,9 +61,9 @@ public class detailsFragment extends Fragment {
     {
         super.onAttach(context);
         this.context=context;
-        db = new DatabaseHandler(context);
+        /*db = new DatabaseHandler(context);
          cat = new ArrayList<>(db.getAllCategory());
-        Log.d("ARR","ARR"+cat);
+        Log.d("ARR","ARR"+cat);*/
 
     }
 
@@ -174,9 +140,19 @@ public class detailsFragment extends Fragment {
                     Log.d("DTA", "SAVER" + ((Main2Activity) getActivity()).maindatasaver);
                 List<Long> selCat = new ArrayList<>();
                 selCat = spinner.getSelectedIds();
+                String catids = null;
                 for (int i = 0; i < selCat.size(); i++) {
                     Log.d("CAT","SELECTED"+selCat.get(i));
+                    if(i==0)
+                    {
+                        catids = selCat.get(i).toString();
+                    }
+                    else
+                    {
+                        catids = catids+","+selCat.get(i).toString();
+                    }
                 }
+                Log.d("CAT","SELECTED"+catids);
 
                 if (img.getDrawable() == null || resultUri == null) {
                         Toast.makeText(getActivity(), "Picture Please", Toast.LENGTH_SHORT).show();
@@ -187,9 +163,26 @@ public class detailsFragment extends Fragment {
                     } else if (desc.getText().toString().trim().equals("")) {
                         Toast.makeText(getActivity(), "Description Please", Toast.LENGTH_SHORT).show();
                         desc.setError("Desc is required!");
+                    } else if (catids == null) {
+                        Toast.makeText(getActivity(), "Select Category Please", Toast.LENGTH_SHORT).show();
+                    }
+                    else if (imagefilePath == null) {
+                        Toast.makeText(getActivity(), "ImagePath is Empty", Toast.LENGTH_SHORT).show();
                     }
                     else {
                         String Savetitle, Savedesc;
+                        Savetitle = title.getText().toString();
+                        Savedesc = desc.getText().toString();
+
+                        ((Main2Activity) getActivity()).storysaver.setcaption(Savetitle);
+                        ((Main2Activity) getActivity()).storysaver.setdesc(Savedesc);
+                        ((Main2Activity) getActivity()).storysaver.setPath(imagefilePath);
+                        ((Main2Activity) getActivity()).storysaver.setCat_id(catids);
+
+                        //Navigate
+                        ((Main2Activity) getActivity()).viewPager.setCurrentItem(1, true);
+
+                        /* WHEN STORING IN DB
                         byte[] inputData = null;
                         try {
                             InputStream iStream = getActivity().getContentResolver().openInputStream(resultUri);
@@ -197,8 +190,6 @@ public class detailsFragment extends Fragment {
                         }catch (IOException e) {
                             e.printStackTrace();
                         }
-
-                        /*
                         Log.d("PHOTO", "PIC" + inputData);
                         if (inputData != null) {
                             Savetitle = title.getText().toString();
@@ -209,15 +200,6 @@ public class detailsFragment extends Fragment {
                             ((Main2Activity) getActivity()).maindatasaver.setStoryData(Savetitle, Savedesc, inputData);
                             ((Main2Activity) getActivity()).maindatasaver.set_cat_id(cid);
                         }*/
-
-                        if (isOnline(getContext())) {
-                            new MyAwesomeAsyncTask().execute();
-                        }
-                        else {
-                            Toast.makeText(getActivity(),
-                                    "Please check your internet connection!",
-                                    Toast.LENGTH_LONG).show();
-                        }
 
 
                     }
@@ -322,72 +304,6 @@ public class detailsFragment extends Fragment {
 
     }
 
-    private boolean isOnline(Context context) {
-        ConnectivityManager cm = (ConnectivityManager) context
-                .getSystemService(Context.CONNECTIVITY_SERVICE);
-        NetworkInfo netInfo = cm.getActiveNetworkInfo();
-        if (netInfo != null && netInfo.isConnected()) {
-            return true;
-        }
-        return false;
-    }
-
-    private class MyAwesomeAsyncTask extends AsyncTask<Void, Void, Void> {
-
-        private ProgressDialog pd;
-        MyFTPClientFunctions mFtpClient = new MyFTPClientFunctions();
-
-
-        @Override
-        protected void onPreExecute() {
-            //Create progress dialog here and show it
-            pd = ProgressDialog.show(getContext(), "", "Uploading...", true, false);
-        }
-
-        @Override
-        protected Void doInBackground(Void... params) {
-
-            FTPstatus = mFtpClient.ftpConnect("166.62.28.118","smv@kookyapps.com","kooky_smv",21);
-            if (FTPstatus) {
-                boolean uploaded = false;
-                //Log.d("TAG", "Connection Success");
-                String getCurrentDir = mFtpClient.ftpGetCurrentWorkingDirectory();
-                //Log.d("TAG", "CURRENT DIR"+getCurrentDir);
-
-                //Log.d("TAG", "FILE PATH"+imagefilePath);
-                String newname = System.currentTimeMillis() + ".jpg";
-                UploadedUrl = "kookyapps.com/smv/uploads/"+newname;
-                // Log.d("URL","URL - "+url);
-
-                uploaded = mFtpClient.ftpUploadImage(imagefilePath,newname,"/",getActivity());
-                if(uploaded) {Log.d("UPLOAD","YES"); handler.sendEmptyMessage(2);}
-                else{Log.d("UPLOAD","NO"); handler.sendEmptyMessage(4);}
-
-                mFtpClient.ftpDisconnect();
-
-            }else {
-                handler.sendEmptyMessage(-1);
-            }
-
-            return null;
-
-        }
-
-        @Override
-        protected void onPostExecute(Void result) {
-            super.onPostExecute(result);
-
-            pd.dismiss();
-            ((Main2Activity) getActivity()).viewPager.setCurrentItem(1, true);
-            img.setEnabled(false);
-            title.setText("");
-            desc.setText("");
-            //update your listView adapter here
-            //Dismiss your dialog
-
-        }
-
-    }
   /*  private void connectToFTPAddress() {
         mFtpClient = new MyFTPClientFunctions();
         pd = ProgressDialog.show(getContext(), "", "Uploading...",
