@@ -348,7 +348,7 @@ public class MainActivity extends AppCompatActivity
             }
 
 
-            //GetCategorys();
+            //GetCategorys();*
             return null;
         }
 

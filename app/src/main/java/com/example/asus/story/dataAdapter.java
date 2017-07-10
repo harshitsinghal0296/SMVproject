@@ -19,6 +19,7 @@ import android.widget.Toast;
 import com.bumptech.glide.Glide;
 
 import java.io.ByteArrayOutputStream;
+import java.net.URI;
 import java.util.ArrayList;
 
 /**
@@ -32,7 +33,6 @@ public class dataAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     private LayoutInflater inflater;
     private AdapterCallback mAdapterCallback;
     Typeface monstRegular,monstBold;
-
 
     public dataAdapter(Context context, ArrayList<Story> story) {
         super();
@@ -63,13 +63,16 @@ public class dataAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
 
         // Get current position of item in recyclerview to bind data and assign values from list
-        MyHolder myHolder= (MyHolder) holder;
+        MyHolder myHolder;
+
+        myHolder= (MyHolder) holder;
         Story current = mstory.get(position);
 
         myHolder.id = current._id;
         myHolder.captionText.setText(current._caption);
         myHolder.descText = current._desc ;
-       //GET IMAGE FROM DB
+        myHolder.url=current._url;
+        //GET IMAGE FROM DB
         //myHolder.img.setImageBitmap(convertToBitmap(current.getImage()));
 
         // load image into imageview using glide from API (url)
@@ -92,6 +95,7 @@ public class dataAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
         TextView captionText;
         ImageView img;
+        String url;
         String descText;
         Integer id;
 
@@ -102,27 +106,30 @@ public class dataAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             final Context context1 = context;
             captionText = (TextView) itemView.findViewById(R.id.txtViewer);
             img = (ImageView) itemView.findViewById(R.id.imgView);
-
             //descText = (TextView) itemView.findViewById(R.id.textView3);
             itemView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
                     try {
 
-                        /*String s=descText.toString();
-                        String t=captionText.getText().toString();
+                      String t=captionText.getText().toString();
 
                         img.buildDrawingCache();
                         Bitmap bitmap = img.getDrawingCache();
                         ByteArrayOutputStream stream=new ByteArrayOutputStream();
                         bitmap.compress(Bitmap.CompressFormat.PNG, 90, stream);
                         byte[] image=stream.toByteArray();
-                        String img_str = Base64.encodeToString(image, 0); */
+                        String img_str = Base64.encodeToString(image, 0);
 
-                        Integer currID=id;
-                        //Log.d("ID","CURRENT :::"+currID);
-                        Intent i=new Intent(context1,popup.class);
-                        i.putExtra("CURRENT_ID",currID);
+               //         Integer currID=id;
+               //         Log.d("ID","CURRENT :::"+"1");
+                          Intent i=new Intent(context1,popup.class);
+                 //       i.putExtra("CURRENT_ID",currID);
+                        i.putExtra("title",descText);
+                        i.putExtra("caption",t);
+               //         i.putExtra("img",img_str);
+                        Log.d("TAG",url);
+                        i.putExtra("imageUri", url);
                         context1.startActivity(i);
 
                        // mAdapterCallback.onclickRecylcer(videoId);
