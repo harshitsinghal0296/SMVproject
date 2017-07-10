@@ -40,19 +40,37 @@
         android:textColor="@android:color/background_dark"
         android:textColorHint="@color/gray" />
 
-    <TextView
-        android:id="@+id/upload"
-        android:layout_width="wrap_content"
+    <RelativeLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_alignParentEnd="true"
-        android:layout_gravity="right"
-        android:layout_marginEnd="50dp"
         android:layout_weight="1"
-        android:layout_marginTop="15dp"
-        android:drawableRight="@drawable/rightarrow"
-        android:gravity="center"
-        android:text="@string/upload"
-        android:textColor="@android:color/background_dark"
-        android:textSize="19dp"
-        tools:ignore="ObsoleteLayoutParam,RtlHardcoded" />
+        android:paddingLeft="50dp">
+
+        <Button
+            android:id="@+id/otpbtn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentStart="true"
+            android:layout_centerVertical="true"
+            android:paddingLeft="15dp"
+            android:paddingRight="15dp"
+            android:text="Generate Otp" />
+
+        <TextView
+            android:id="@+id/upload"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentEnd="true"
+            android:layout_centerVertical="true"
+            android:layout_gravity="right"
+            android:layout_marginEnd="50dp"
+            android:layout_weight="1"
+            android:drawableRight="@drawable/rightarrow"
+            android:gravity="center"
+            android:text="@string/upload"
+            android:textColor="@android:color/background_dark"
+            android:textSize="19dp"
+            tools:ignore="ObsoleteLayoutParam,RtlHardcoded" />
+    </RelativeLayout>
+
 </LinearLayout>

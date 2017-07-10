@@ -1,6 +1,5 @@
 package com.example.asus.story;
 
-import android.app.Application;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
@@ -15,6 +14,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -26,11 +26,8 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.VolleyLog;
 import com.android.volley.toolbox.JsonObjectRequest;
-import com.android.volley.toolbox.JsonRequest;
-import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -46,42 +43,12 @@ public class confirmationFragment extends Fragment {
     public static final String KEY_IMG = "n_img";
     public static final String KEY_EMAIL = "n_email";
     int responseFlag = 0,OtpresponseFlag = 0;
-    int inside = 1;
     LinearLayout rl;
     public EditText email,otp;
+    Button otpButton;
     TextView upload;
     private DatabaseHandler db;
-    boolean FTPstatus = false,onPost = false;
-    private MyFTPClientFunctions mFtpClient = null;
     private ProgressDialog pd;
-    private String UploadedUrl;
-    private Handler handler = new Handler() {
-
-        public void handleMessage(android.os.Message msg) {
-
-            if (pd != null && pd.isShowing()) {
-                pd.dismiss();
-            }
-            if (msg.what == 0) {
-            }
-            else if (msg.what == 1) {
-
-            } else if (msg.what == 2) {
-                //Toast.makeText(getContext(), "Uploaded Successfully!", Toast.LENGTH_LONG).show();
-            } else if (msg.what == 3) {
-                Toast.makeText(getContext(), "Disconnected Successfully!",
-                        Toast.LENGTH_LONG).show();
-            }  else if (msg.what == 4) {
-                Toast.makeText(getContext(), "Failed Uploading!",
-                        Toast.LENGTH_LONG).show();
-            }else {
-                Toast.makeText(getContext(), "Unable to Perform Action!",
-                        Toast.LENGTH_LONG).show();
-            }
-
-        }
-
-    };
 
     public confirmationFragment(){
     }
@@ -104,6 +71,7 @@ public class confirmationFragment extends Fragment {
                              Bundle savedInstanceState) {
         View v3 = inflater.inflate(R.layout.confirmation_frag , container, false);
         upload = (TextView) v3.findViewById(R.id.upload);
+        otpButton = (Button) v3.findViewById(R.id.otpbtn);
         rl = (LinearLayout) v3.findViewById(R.id.rl3);
         email = (EditText) v3.findViewById(R.id.email);
         otp = (EditText) v3.findViewById(R.id.otp);
@@ -112,6 +80,35 @@ public class confirmationFragment extends Fragment {
         email.getText().equals("");
         otp.setTypeface(monstRegular);
         upload.setTypeface(monstRegular);
+        otpButton.setOnClickListener(new View.OnClickListener(){
+            @Override
+            public void onClick(View v) {
+                if(responseFlag == 1) {
+                    Toast.makeText(getActivity(),
+                            "Already Uploaded, Please check your email for OTP!",
+                            Toast.LENGTH_LONG).show();
+                }
+                else
+                    {
+                    if (email.getText().toString().trim().equals("")) {
+                        email.setError("Email is Required");
+                    } else {
+                        String em = email.getText().toString();
+                        ((Main2Activity) getActivity()).storysaver.setEmail(em);
+
+                        if (isOnline(getContext())) {
+                            //new DataSendAsyncTask().execute();
+                            send();
+
+                        } else {
+                            Toast.makeText(getActivity(),
+                                    "Please check your internet connection!",
+                                    Toast.LENGTH_LONG).show();
+                        }
+                    }
+                }
+            }
+        });
         upload.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -123,43 +120,33 @@ public class confirmationFragment extends Fragment {
                 long sid = db.addstory(new Story(title, img, desc));
                 long tid = db.createTransaction(sid,cid);
                */
-              if(inside == 1) {
-                  if (email.getText().toString().trim().equals("")) {
-                      email.setError("Email is Required");
-                  } else {
-                      String em = email.getText().toString();
-                      ((Main2Activity) getActivity()).storysaver.setEmail(em);
 
-                      if (isOnline(getContext())) {
-                          new MyAwesomeAsyncTask().execute();
-
-                      } else {
-                          Toast.makeText(getActivity(),
-                                  "Please check your internet connection!",
-                                  Toast.LENGTH_LONG).show();
-                      }
-                  }
-              }
-              else
-              {
-
-                  int OTPCHK = verifyOtp();
-
-                  if(OTPCHK == 1)
+                  if(otp.getText().toString().trim().equals(""))
                   {
-                      Toast.makeText(getActivity(), "Updated Successfully", Toast.LENGTH_SHORT).show();
-                      getActivity().startActivity(new Intent(getActivity(),MainActivity.class));
-                      getActivity().finish();
-                      //overridePendingTransition( R.anim.lefttoright, R.anim.stable );
+                        Toast.makeText(getContext(), "Otp Please!", Toast.LENGTH_LONG).show();
+                        otp.setError("Otp Required");
                   }
                   else
                   {
-                      Toast.makeText(getActivity(), "OTP Verification Failed ! Try Again", Toast.LENGTH_SHORT).show();
+                      if (isOnline(getContext())) {
+                          if(responseFlag == 1) {
+                              verifyOtp();
+                          }
+                          else
+                          {
+                              Toast.makeText(getContext(), "Generate Otp Please ! ", Toast.LENGTH_LONG).show();
+                          }
+
+                      } else {
+                      Toast.makeText(getActivity(),
+                              "Please check your internet connection!",
+                              Toast.LENGTH_LONG).show();
+                      }
+
                   }
-              }
             }
         });
-        Log.d("TAG", "FILE PATH"+ ((Main2Activity) getActivity()).storysaver.getPath());
+
         // Inflate the layout for this fragment
         //return inflater.inflate(R.layout.confirmation_frag, container, false);
         return v3;
@@ -176,74 +163,17 @@ public class confirmationFragment extends Fragment {
         return false;
     }
 
-    private class MyAwesomeAsyncTask extends AsyncTask<Void, Void, Void> {
 
-        private ProgressDialog pd;
-        MyFTPClientFunctions mFtpClient = new MyFTPClientFunctions();
-
-
-        @Override
-        protected void onPreExecute() {
-            //Create progress dialog here and show it
-            pd = ProgressDialog.show(getContext(), "", "Uploading...", true, false);
-        }
-
-        @Override
-        protected Void doInBackground(Void... params) {
-
-            FTPstatus = mFtpClient.ftpConnect("166.62.28.118","smv@kookyapps.com","kooky_smv",21);
-            if (FTPstatus) {
-                boolean uploaded = false;
-                //Log.d("TAG", "Connection Success");
-                String getCurrentDir = mFtpClient.ftpGetCurrentWorkingDirectory();
-                //Log.d("TAG", "CURRENT DIR"+getCurrentDir);
-                //Log.d("TAG", "FILE PATH"+imagefilePath);
-                String newname = System.currentTimeMillis() + ".jpg";
-                UploadedUrl = "http://kookyapps.com/smv/uploads/"+newname;
-                // Log.d("URL","URL - "+url);
-
-                String imagefilePath = ((Main2Activity) getActivity()).storysaver.getPath();
-                uploaded = mFtpClient.ftpUploadImage(imagefilePath,newname,"/",getActivity());
-                if(uploaded) {
-                    Log.d("UPLOAD","YES"); handler.sendEmptyMessage(2);
-                    ((Main2Activity) getActivity()).storysaver.setUrl(UploadedUrl);
-                }
-                else{Log.d("UPLOAD","NO"); handler.sendEmptyMessage(4);}
-
-                mFtpClient.ftpDisconnect();
-
-            }else {
-                handler.sendEmptyMessage(-1);
-            }
-
-            return null;
-
-        }
-
-        @Override
-        protected void onPostExecute(Void result) {
-            super.onPostExecute(result);
-            pd.dismiss();
-            int res = send();
-            if(res == 1)
-            {
-                inside = 2;
-                Toast.makeText(getContext(), "Check Email for OTP !", Toast.LENGTH_LONG).show();
-            }
-            //update your listView adapter here
-            //Dismiss your dialog
-
-        }
-
-    }
-
-    private int send(){
+    private void send(){
 
         String title = ((Main2Activity) getActivity()).storysaver.getCaption();
         String desc = ((Main2Activity) getActivity()).storysaver.getDesc();
         String cat = ((Main2Activity) getActivity()).storysaver.getCat_id();
         String img = ((Main2Activity) getActivity()).storysaver.getUrl();
         String email = ((Main2Activity) getActivity()).storysaver.getEmail();
+
+        pd = ProgressDialog.show(getContext(), "", "Uploading Data", true, false);
+
         HashMap<String, String> params = new HashMap<String, String>();
         params.put(KEY_TITLE,title);
         params.put(KEY_DESC,desc);
@@ -259,6 +189,13 @@ public class confirmationFragment extends Fragment {
                             VolleyLog.v("Response:%n %s", response.toString(4));
                             Log.d("Response:%n %s", response.toString(4));
                             responseFlag = response.getInt("response");
+                            pd.dismiss();
+                            if(responseFlag == 1) {
+                                Toast.makeText(getActivity(), "Otp generated Check your Email", Toast.LENGTH_LONG).show();
+                            }
+                            else {
+                                Toast.makeText(getActivity(), "OTP Generated Error ! Try Again", Toast.LENGTH_LONG).show();
+                            }
                         } catch (JSONException e) {
                             e.printStackTrace();
                         }
@@ -271,24 +208,19 @@ public class confirmationFragment extends Fragment {
         });
         RequestQueue requestQueue = Volley.newRequestQueue(getActivity());
         requestQueue.add(req);
-        return responseFlag;
     }
 
-    private int verifyOtp(){
+    private void verifyOtp(){
 
-        if(otp.getText().toString().trim().equals(""))
-        {
-            Toast.makeText(getContext(), "Otp Please!", Toast.LENGTH_LONG).show();
-            otp.setError("Otp Required");
-        }
-        else {
             String email = ((Main2Activity) getActivity()).storysaver.getEmail();
             String otpParam = otp.getText().toString();
-
 
             HashMap<String, String> params = new HashMap<String, String>();
             params.put("n_email", email);
             params.put("n_otp", otpParam);
+
+
+        pd = ProgressDialog.show(getContext(), "", "Verfying Otp", true, false);
 
             JsonObjectRequest req = new JsonObjectRequest(Request.Method.POST, OTP_URL, new JSONObject(params),
                     new Response.Listener<JSONObject>() {
@@ -298,6 +230,18 @@ public class confirmationFragment extends Fragment {
                                 VolleyLog.v("Response:%n %s", response.toString(4));
                                 Log.d("Response:%n %s", response.toString(4));
                                 OtpresponseFlag = response.getInt("response");
+                                pd.dismiss();
+                                if(OtpresponseFlag == 1)
+                                {
+                                    Toast.makeText(getActivity(), "OTP verified", Toast.LENGTH_SHORT).show();
+                                    getActivity().startActivity(new Intent(getActivity(),MainActivity.class));
+                                    getActivity().finish();
+                                    //overridePendingTransition( R.anim.lefttoright, R.anim.stable );
+                                }
+                                else
+                                {
+                                    Toast.makeText(getActivity(), "OTP Verification Failed ! Try Again", Toast.LENGTH_SHORT).show();
+                                }
                             } catch (JSONException e) {
                                 e.printStackTrace();
                             }
@@ -310,8 +254,6 @@ public class confirmationFragment extends Fragment {
             });
             RequestQueue requestQueue = Volley.newRequestQueue(getActivity());
             requestQueue.add(req);
-        }
-        return OtpresponseFlag;
     }
 
 }

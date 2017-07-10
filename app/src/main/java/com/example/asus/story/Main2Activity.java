@@ -44,6 +44,7 @@ public class Main2Activity extends AppCompatActivity {
         Log.d("MAIN","2"+maindatasaver);
         catlist = new ArrayList<HashMap<String, String>>();
         catlist = (ArrayList<HashMap<String, String>>) getIntent().getSerializableExtra("CATEGORY");
+        catlist.remove(0);
         Log.d("CATEGORY LIST","SIZE"+catlist.size());
         monstRegular = Typeface.createFromAsset(getAssets(), "fonts/Montserrat-Regular.ttf");
         monstBold = Typeface.createFromAsset(getAssets(), "fonts/Montserrat-Bold.ttf");

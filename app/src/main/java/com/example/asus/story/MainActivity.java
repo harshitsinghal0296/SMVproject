@@ -77,26 +77,14 @@ public class MainActivity extends AppCompatActivity
         if(isOnline(this))
         {
             new GetCategory().execute();
-            GetCategorys();
+            //GetCategorys();
         }
         else
         {
-            Snackbar snackbar = Snackbar
-            .make(mainRL,"No internet connection!", Snackbar.LENGTH_LONG)
-            .setAction("RETRY", new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                }
-            });
-
-            // Changing message text color
-            snackbar.setActionTextColor(Color.RED);
-
-            // Changing action button text color
-                        View sbView = snackbar.getView();
-                        TextView textView = (TextView) sbView.findViewById(android.support.design.R.id.snackbar_text);
-                        textView.setTextColor(Color.YELLOW);
-                        snackbar.show();
+            Toast.makeText(getApplicationContext(),
+                    "Internet is not Connected",
+                    Toast.LENGTH_LONG)
+                    .show();
         }
         monstRegular = Typeface.createFromAsset(getAssets(), "fonts/Montserrat-Regular.ttf");
         monstBold = Typeface.createFromAsset(getAssets(), "fonts/Montserrat-Bold.ttf");
@@ -397,7 +385,7 @@ public class MainActivity extends AppCompatActivity
         }
 
     }
-
+/*
     public void GetCategorys()
     {
         JsonObjectRequest req = new JsonObjectRequest(Request.Method.POST,url,
@@ -439,7 +427,7 @@ public class MainActivity extends AppCompatActivity
         RequestQueue requestQueue = Volley.newRequestQueue(MainActivity.this);
         requestQueue.add(req);
 
-    }
+    } */
 }
 
 

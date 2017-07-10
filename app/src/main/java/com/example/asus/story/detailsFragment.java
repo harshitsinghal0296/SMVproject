@@ -1,14 +1,17 @@
 package com.example.asus.story;
 
 import android.annotation.TargetApi;
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Typeface;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Handler;
 import android.provider.MediaStore;
 import android.support.v4.app.Fragment;
 import android.util.Log;
@@ -51,6 +54,36 @@ public class detailsFragment extends Fragment {
     String imagefilePath = null;
     private int selected = 0;
     private String UploadedUrl;
+    private ProgressDialog pd;
+    boolean FTPstatus,uploaded;
+    private Handler handler = new Handler() {
+
+        public void handleMessage(android.os.Message msg) {
+
+            if (pd != null && pd.isShowing()) {
+                pd.dismiss();
+            }
+            if (msg.what == 0) {
+            }
+            else if (msg.what == 1) {
+
+            } else if (msg.what == 2) {
+                //Toast.makeText(getContext(), "Uploaded Successfully!", Toast.LENGTH_LONG).show();
+            } else if (msg.what == 3) {
+                Toast.makeText(getContext(), "Disconnected Successfully!",
+                        Toast.LENGTH_LONG).show();
+            }  else if (msg.what == 4) {
+                Toast.makeText(getContext(), "Failed Uploading!",
+                        Toast.LENGTH_LONG).show();
+            }else {
+                Toast.makeText(getContext(), "Unable to Perform Action!",
+                        Toast.LENGTH_LONG).show();
+            }
+
+        }
+
+    };
+
 
     public detailsFragment(){
 
@@ -179,8 +212,9 @@ public class detailsFragment extends Fragment {
                         ((Main2Activity) getActivity()).storysaver.setPath(imagefilePath);
                         ((Main2Activity) getActivity()).storysaver.setCat_id(catids);
 
+                        new ImageUploadAsyncTask().execute();
                         //Navigate
-                        ((Main2Activity) getActivity()).viewPager.setCurrentItem(1, true);
+
 
                         /* WHEN STORING IN DB
                         byte[] inputData = null;
@@ -303,7 +337,59 @@ public class detailsFragment extends Fragment {
         return bos.toByteArray();
 
     }
+    private class ImageUploadAsyncTask extends AsyncTask<Void, Void, Void> {
 
+        private ProgressDialog pd;
+        MyFTPClientFunctions mFtpClient = new MyFTPClientFunctions();
+
+
+        @Override
+        protected void onPreExecute() {
+            //Create progress dialog here and show it
+            pd = ProgressDialog.show(getContext(), "", "Image Uploading", true, false);
+        }
+
+        @Override
+        protected Void doInBackground(Void... params) {
+
+            FTPstatus = mFtpClient.ftpConnect("166.62.28.118","smv@kookyapps.com","kooky_smv",21);
+            if (FTPstatus) {
+                //Log.d("TAG", "Connection Success");
+                String getCurrentDir = mFtpClient.ftpGetCurrentWorkingDirectory();
+                //Log.d("TAG", "CURRENT DIR"+getCurrentDir);
+                //Log.d("TAG", "FILE PATH"+imagefilePath);
+                String newname = System.currentTimeMillis() + ".jpg";
+                UploadedUrl = "http://kookyapps.com/smv/uploads/"+newname;
+                // Log.d("URL","URL - "+url);
+
+                String imagefilePath = ((Main2Activity) getActivity()).storysaver.getPath();
+                uploaded = mFtpClient.ftpUploadImage(imagefilePath,newname,"/",getActivity());
+                if(uploaded) {
+                    Log.d("UPLOAD","YES"); handler.sendEmptyMessage(2);
+                    ((Main2Activity) getActivity()).storysaver.setUrl(UploadedUrl);
+                }
+                else{Log.d("UPLOAD","NO"); handler.sendEmptyMessage(4);}
+
+                mFtpClient.ftpDisconnect();
+
+            }else {
+                handler.sendEmptyMessage(-1);
+            }
+
+            return null;
+
+        }
+
+        @Override
+        protected void onPostExecute(Void result) {
+            super.onPostExecute(result);
+            pd.dismiss();
+            ((Main2Activity) getActivity()).viewPager.setCurrentItem(1, true);
+
+        }
+    }
+
+}
   /*  private void connectToFTPAddress() {
         mFtpClient = new MyFTPClientFunctions();
         pd = ProgressDialog.show(getContext(), "", "Uploading...",
@@ -334,6 +420,6 @@ public class detailsFragment extends Fragment {
             }
         }).start();
     } */
-}
+
 
 

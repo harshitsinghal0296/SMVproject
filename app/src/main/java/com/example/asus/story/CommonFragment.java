@@ -90,19 +90,19 @@ public class CommonFragment extends Fragment {
         lv.setLayoutManager(mlayoutmanager);
 
 
-        getData();
+        getData(message);
 
         return v1;
     }
 
-    public void getData()
+    public void getData(String id)
     {
         // Tag used to cancel the request
 
         String url = "http://kookyapps.com/smv/api/FetchNews/";
 
         HashMap<String, String> params = new HashMap<String, String>();
-        params.put("cat_id", "0");
+        params.put("cat_id", id);
         params.put("upper_limit", "0");
         params.put("lower_limit", "10");
 
